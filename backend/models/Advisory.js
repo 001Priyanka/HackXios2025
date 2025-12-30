@@ -154,6 +154,67 @@ const advisorySchema = new mongoose.Schema({
       type: Date
     }
   },
+  // Translation information
+  translationInfo: {
+    farmerLanguage: {
+      type: String,
+      trim: true
+    },
+    languageCode: {
+      type: String,
+      trim: true
+    },
+    translationMethod: {
+      type: String,
+      trim: true
+    },
+    translationConfidence: {
+      type: Number,
+      min: 0,
+      max: 1
+    },
+    translatedAt: {
+      type: Date
+    }
+  },
+  // Translated advisory result (optional - only if translation was performed)
+  translatedAdvisoryResult: {
+    cropAdvice: {
+      recommendation: String,
+      confidence: Number,
+      explanation: String,
+      ruleApplied: String
+    },
+    fertilizerAdvice: {
+      recommendation: String,
+      confidence: Number,
+      explanation: String,
+      ruleApplied: String
+    },
+    irrigationAdvice: {
+      recommendation: String,
+      confidence: Number,
+      explanation: String,
+      ruleApplied: String
+    },
+    weatherAdvice: {
+      currentWeather: {
+        temperature: String,
+        humidity: String,
+        description: String
+      },
+      warnings: [{
+        type: String,
+        severity: String,
+        message: String
+      }],
+      recommendations: [String],
+      confidence: Number,
+      explanation: String,
+      ruleApplied: String
+    },
+    confidenceScore: Number
+  },
   createdAt: {
     type: Date,
     default: Date.now,
@@ -185,6 +246,10 @@ advisorySchema.virtual('summary').get(function() {
 
 // Instance method to get formatted advisory
 advisorySchema.methods.getFormattedAdvisory = function() {
+  // Determine which advisory to use (translated if available, otherwise original)
+  const advisoryToUse = this.translatedAdvisoryResult || this.advisoryResult;
+  const isTranslated = !!this.translatedAdvisoryResult;
+
   const formatted = {
     advisoryId: this._id,
     farmerInfo: {
@@ -195,33 +260,33 @@ advisorySchema.methods.getFormattedAdvisory = function() {
     },
     recommendations: {
       crop: {
-        advice: this.advisoryResult.cropAdvice.recommendation,
-        confidence: this.advisoryResult.cropAdvice.confidence,
-        reasoning: this.advisoryResult.cropAdvice.explanation
+        advice: advisoryToUse.cropAdvice.recommendation,
+        confidence: advisoryToUse.cropAdvice.confidence,
+        reasoning: advisoryToUse.cropAdvice.explanation
       },
       fertilizer: {
-        advice: this.advisoryResult.fertilizerAdvice.recommendation,
-        confidence: this.advisoryResult.fertilizerAdvice.confidence,
-        reasoning: this.advisoryResult.fertilizerAdvice.explanation
+        advice: advisoryToUse.fertilizerAdvice.recommendation,
+        confidence: advisoryToUse.fertilizerAdvice.confidence,
+        reasoning: advisoryToUse.fertilizerAdvice.explanation
       },
       irrigation: {
-        advice: this.advisoryResult.irrigationAdvice.recommendation,
-        confidence: this.advisoryResult.irrigationAdvice.confidence,
-        reasoning: this.advisoryResult.irrigationAdvice.explanation
+        advice: advisoryToUse.irrigationAdvice.recommendation,
+        confidence: advisoryToUse.irrigationAdvice.confidence,
+        reasoning: advisoryToUse.irrigationAdvice.explanation
       }
     },
-    overallConfidence: this.advisoryResult.confidenceScore,
+    overallConfidence: advisoryToUse.confidenceScore,
     generatedAt: this.createdAt
   };
 
   // Add weather advice if available
-  if (this.advisoryResult.weatherAdvice) {
+  if (advisoryToUse.weatherAdvice) {
     formatted.recommendations.weather = {
-      currentConditions: this.advisoryResult.weatherAdvice.currentWeather,
-      warnings: this.advisoryResult.weatherAdvice.warnings,
-      advice: this.advisoryResult.weatherAdvice.recommendations,
-      confidence: this.advisoryResult.weatherAdvice.confidence,
-      reasoning: this.advisoryResult.weatherAdvice.explanation
+      currentConditions: advisoryToUse.weatherAdvice.currentWeather,
+      warnings: advisoryToUse.weatherAdvice.warnings,
+      advice: advisoryToUse.weatherAdvice.recommendations,
+      confidence: advisoryToUse.weatherAdvice.confidence,
+      reasoning: advisoryToUse.weatherAdvice.explanation
     };
   }
 
@@ -248,6 +313,23 @@ advisorySchema.methods.getFormattedAdvisory = function() {
     formatted.weatherInfo = {
       included: false,
       reason: 'No weather data requested or available'
+    };
+  }
+
+  // Add translation information if available
+  if (this.translationInfo) {
+    formatted.translationInfo = {
+      isTranslated: isTranslated,
+      farmerLanguage: this.translationInfo.farmerLanguage,
+      languageCode: this.translationInfo.languageCode,
+      method: this.translationInfo.translationMethod,
+      confidence: this.translationInfo.translationConfidence,
+      translatedAt: this.translationInfo.translatedAt
+    };
+  } else {
+    formatted.translationInfo = {
+      isTranslated: false,
+      reason: 'No translation performed (English or translation not requested)'
     };
   }
 

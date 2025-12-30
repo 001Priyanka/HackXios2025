@@ -9,6 +9,8 @@ const AdvisoryResult = () => {
   const [formattedAdvisory, setFormattedAdvisory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isListening, setIsListening] = useState(false);
+  const [showOriginalLanguage, setShowOriginalLanguage] = useState(false);
+  const [translationLoading, setTranslationLoading] = useState(false);
 
   useEffect(() => {
     // Retrieve data from localStorage
@@ -185,6 +187,29 @@ const AdvisoryResult = () => {
     navigate('/feedback');
   };
 
+  const handleLanguageToggle = async () => {
+    if (!formattedAdvisory?.translationInfo?.canToggle) return;
+
+    setTranslationLoading(true);
+    
+    try {
+      // Simulate toggle delay for better UX
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      setShowOriginalLanguage(!showOriginalLanguage);
+      
+      // Note: In a real implementation, you might want to:
+      // 1. Fetch original advisory from API if not cached
+      // 2. Re-translate to different language
+      // 3. Store user's language preference
+      
+    } catch (error) {
+      console.error('Language toggle error:', error);
+    } finally {
+      setTranslationLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="result-container">
@@ -257,6 +282,94 @@ const AdvisoryResult = () => {
             </div>
           </div>
         </div>
+
+        {/* Translation Information Section */}
+        {formattedAdvisory.translationInfo && (
+          <div className="translation-info">
+            <div className="translation-header">
+              <div className="translation-status">
+                {formattedAdvisory.translationInfo.isTranslated ? (
+                  <>
+                    <span className="translation-icon">🌐</span>
+                    <div className="translation-details">
+                      <h3>Translated Advisory</h3>
+                      <p>
+                        Showing in {AdvisoryService.getLanguageDisplayName(formattedAdvisory.translationInfo.languageCode)} 
+                        {AdvisoryService.getLanguageFlag(formattedAdvisory.translationInfo.languageCode)}
+                      </p>
+                      {formattedAdvisory.translationInfo.confidence !== undefined && (
+                        <div className="translation-quality">
+                          <span className="quality-indicator">
+                            {AdvisoryService.getTranslationQuality(formattedAdvisory.translationInfo.confidence).emoji}
+                            {AdvisoryService.getTranslationQuality(formattedAdvisory.translationInfo.confidence).text}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <span className="translation-icon">🇺🇸</span>
+                    <div className="translation-details">
+                      <h3>Original Advisory</h3>
+                      <p>Showing in English</p>
+                    </div>
+                  </>
+                )}
+              </div>
+              
+              {/* Language Toggle Button */}
+              {formattedAdvisory.translationInfo.canToggle && (
+                <button 
+                  onClick={handleLanguageToggle}
+                  className={`language-toggle-btn ${translationLoading ? 'loading' : ''}`}
+                  disabled={translationLoading}
+                  type="button"
+                  aria-label="Toggle language"
+                >
+                  {translationLoading ? (
+                    <>
+                      <span className="loading-spinner"></span>
+                      Switching...
+                    </>
+                  ) : showOriginalLanguage ? (
+                    <>
+                      <span className="toggle-icon">{AdvisoryService.getLanguageFlag(formattedAdvisory.translationInfo.languageCode)}</span>
+                      Show {AdvisoryService.getLanguageDisplayName(formattedAdvisory.translationInfo.languageCode)}
+                    </>
+                  ) : (
+                    <>
+                      <span className="toggle-icon">🇺🇸</span>
+                      Show English
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+            
+            {/* Translation Method Info */}
+            {formattedAdvisory.translationInfo.isTranslated && formattedAdvisory.translationInfo.method && (
+              <div className="translation-method">
+                <small>
+                  Translation method: {formattedAdvisory.translationInfo.method.replace(/_/g, ' ')}
+                  {formattedAdvisory.translationInfo.translatedAt && (
+                    <> • Translated on {AdvisoryService.formatDate(formattedAdvisory.translationInfo.translatedAt)}</>
+                  )}
+                </small>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Translation Loading Overlay */}
+        {translationLoading && (
+          <div className="translation-loading-overlay">
+            <div className="translation-loading-content">
+              <div className="loading-spinner"></div>
+              <p>Switching language...</p>
+            </div>
+          </div>
+        )}
 
         {/* Weather Information Section */}
         {formattedAdvisory.weatherInfo && (
