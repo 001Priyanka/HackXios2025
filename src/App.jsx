@@ -10,6 +10,7 @@ import AdvisoryResult from './components/Advisory/AdvisoryResult';
 import MarketPrices from './components/Market/MarketPrices';
 import Feedback from './components/Feedback/Feedback';
 import DebugSignup from './components/Debug/DebugSignup';
+import AuthDebug from './components/Debug/AuthDebug';
 import './App.css';
 
 function AppContent() {
@@ -22,6 +23,7 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/debug" element={<DebugSignup />} />
+        <Route path="/auth-debug" element={<AuthDebug />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
