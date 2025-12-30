@@ -1,5 +1,6 @@
 const Advisory = require('../models/Advisory');
 const AdvisoryEngine = require('../services/advisoryEngine');
+const weatherService = require('../services/weatherService');
 
 /**
  * Generate new advisory for farmer
@@ -7,7 +8,7 @@ const AdvisoryEngine = require('../services/advisoryEngine');
  */
 const generateAdvisory = async (req, res) => {
   try {
-    const { crop, soilType, season } = req.body;
+    const { crop, soilType, season, location } = req.body;
     const farmerId = req.user.id; // From JWT middleware
 
     // Validate required fields
@@ -36,31 +37,103 @@ const generateAdvisory = async (req, res) => {
       });
     }
 
-    // Generate advisory using Advisory Engine
-    const advisoryEngine = new AdvisoryEngine();
-    const advisoryResult = advisoryEngine.generateAdvice(crop, soilType, season);
+    // Get weather data for the location
+    let weatherData = null;
+    let weatherError = null;
+    
+    // Use provided location or fall back to user's location
+    const weatherLocation = location || req.user.location;
+    
+    if (weatherLocation) {
+      try {
+        console.log(`Fetching weather data for location: ${weatherLocation}`);
+        const weatherResult = await weatherService.getWeatherByLocation(weatherLocation);
+        
+        if (weatherResult.success) {
+          weatherData = weatherResult.data;
+          console.log('Weather data retrieved successfully:', weatherData);
+        } else {
+          weatherError = weatherResult.error;
+          console.warn('Weather service failed:', weatherError);
+        }
+      } catch (error) {
+        weatherError = 'Weather service temporarily unavailable';
+        console.error('Weather service error:', error.message);
+      }
+    } else {
+      console.log('No location provided for weather data');
+    }
 
-    // Save advisory to database
-    const advisory = new Advisory({
+    // Generate advisory using Advisory Engine (with or without weather data)
+    const advisoryEngine = new AdvisoryEngine();
+    const advisoryResult = advisoryEngine.generateAdvice(crop, soilType, season, weatherData);
+
+    // Prepare advisory data for database
+    const advisoryData = {
       farmerId,
       crop: crop.trim(),
       soilType,
       season,
       advisoryResult
-    });
+    };
 
+    // Add weather data to advisory if available
+    if (weatherData) {
+      advisoryData.weatherData = {
+        temperature: weatherData.temperature,
+        humidity: weatherData.humidity,
+        description: weatherData.description,
+        location: weatherLocation,
+        fetchedAt: new Date()
+      };
+    }
+
+    // Add weather error info if weather fetch failed
+    if (weatherError) {
+      advisoryData.weatherError = {
+        message: weatherError,
+        attemptedLocation: weatherLocation,
+        failedAt: new Date()
+      };
+    }
+
+    // Save advisory to database
+    const advisory = new Advisory(advisoryData);
     const savedAdvisory = await advisory.save();
 
     // Return formatted advisory
     const formattedAdvisory = savedAdvisory.getFormattedAdvisory();
 
+    // Add weather information to response
+    const responseData = {
+      advisoryId: savedAdvisory._id,
+      advisory: formattedAdvisory
+    };
+
+    // Include weather information in response
+    if (weatherData) {
+      responseData.weatherInfo = {
+        included: true,
+        location: weatherLocation,
+        data: weatherData
+      };
+    } else if (weatherError) {
+      responseData.weatherInfo = {
+        included: false,
+        error: weatherError,
+        location: weatherLocation || 'No location provided'
+      };
+    } else {
+      responseData.weatherInfo = {
+        included: false,
+        reason: 'No location provided for weather data'
+      };
+    }
+
     res.status(201).json({
       status: 'success',
       message: 'Advisory generated successfully',
-      data: {
-        advisoryId: savedAdvisory._id,
-        advisory: formattedAdvisory
-      }
+      data: responseData
     });
 
   } catch (error) {
