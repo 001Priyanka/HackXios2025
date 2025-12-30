@@ -1027,3 +1027,231 @@
     padding: 0.75rem;
   }
 }
+/* Translation Information Styles */
+.translation-info {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.translation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.translation-status {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.translation-icon {
+  font-size: 2rem;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.translation-details h3 {
+  margin: 0 0 0.25rem 0;
+  color: #334155;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.translation-details p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.translation-quality {
+  margin-top: 0.5rem;
+}
+
+.quality-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(34, 197, 94, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #16a34a;
+}
+
+/* Language Toggle Button */
+.language-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+  justify-content: center;
+}
+
+.language-toggle-btn:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.language-toggle-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.language-toggle-btn.loading {
+  background: #6b7280;
+}
+
+.toggle-icon {
+  font-size: 1.1rem;
+}
+
+.language-toggle-btn .loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0;
+}
+
+/* Translation Method Info */
+.translation-method {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.translation-method small {
+  color: #64748b;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+/* Translation Loading Overlay */
+.translation-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.translation-loading-content {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  max-width: 300px;
+  width: 90%;
+}
+
+.translation-loading-content .loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e5e7eb;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+.translation-loading-content p {
+  margin: 0;
+  color: #374151;
+  font-weight: 500;
+}
+
+/* Quality Indicator Colors */
+.quality-indicator.high {
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+}
+
+.quality-indicator.medium {
+  background: rgba(234, 179, 8, 0.1);
+  color: #ca8a04;
+}
+
+.quality-indicator.low {
+  background: rgba(249, 115, 22, 0.1);
+  color: #ea580c;
+}
+
+.quality-indicator.poor {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+/* Mobile Responsiveness for Translation */
+@media (max-width: 768px) {
+  .translation-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .translation-status {
+    justify-content: center;
+    text-align: center;
+  }
+  
+  .language-toggle-btn {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .translation-info {
+    padding: 1rem;
+    margin: 1.5rem 0;
+  }
+  
+  .translation-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .translation-loading-content {
+    padding: 1.5rem;
+  }
+  
+  .translation-details h3 {
+    font-size: 1rem;
+  }
+  
+  .translation-details p {
+    font-size: 0.85rem;
+  }
+}

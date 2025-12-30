@@ -239,6 +239,25 @@ class AdvisoryService {
       formatted.weatherInfo = advisory.weatherInfo;
     }
 
+    // Add translation information
+    if (advisory.translationInfo) {
+      formatted.translationInfo = {
+        isTranslated: advisory.translationInfo.isTranslated,
+        farmerLanguage: advisory.translationInfo.farmerLanguage,
+        languageCode: advisory.translationInfo.languageCode,
+        method: advisory.translationInfo.method,
+        confidence: advisory.translationInfo.confidence,
+        translatedAt: advisory.translationInfo.translatedAt,
+        canToggle: advisory.translationInfo.isTranslated && advisory.translationInfo.languageCode !== 'en'
+      };
+    } else {
+      formatted.translationInfo = {
+        isTranslated: false,
+        canToggle: false,
+        reason: 'No translation information available'
+      };
+    }
+
     return formatted;
   }
 
@@ -382,6 +401,51 @@ class AdvisoryService {
   static formatHumidity(humidity) {
     if (typeof humidity === 'string') return humidity;
     return `${humidity}%`;
+  }
+
+  /**
+   * Get language display name
+   * @param {string} languageCode - Language code (en, hi, pa)
+   * @returns {string} Display name
+   */
+  static getLanguageDisplayName(languageCode) {
+    const languageNames = {
+      'en': 'English',
+      'hi': 'हिंदी',
+      'pa': 'ਪੰਜਾਬੀ'
+    };
+    return languageNames[languageCode] || languageCode;
+  }
+
+  /**
+   * Get language flag emoji
+   * @param {string} languageCode - Language code
+   * @returns {string} Flag emoji
+   */
+  static getLanguageFlag(languageCode) {
+    const flags = {
+      'en': '🇺🇸',
+      'hi': '🇮🇳',
+      'pa': '🇮🇳'
+    };
+    return flags[languageCode] || '🌐';
+  }
+
+  /**
+   * Get translation quality indicator
+   * @param {number} confidence - Translation confidence (0-1)
+   * @returns {Object} Quality indicator
+   */
+  static getTranslationQuality(confidence) {
+    if (confidence >= 0.8) {
+      return { level: 'high', text: 'High Quality', color: '#22c55e', emoji: '✅' };
+    } else if (confidence >= 0.6) {
+      return { level: 'medium', text: 'Good Quality', color: '#eab308', emoji: '⚠️' };
+    } else if (confidence >= 0.3) {
+      return { level: 'low', text: 'Basic Translation', color: '#f97316', emoji: '🔄' };
+    } else {
+      return { level: 'poor', text: 'Limited Translation', color: '#ef4444', emoji: '❌' };
+    }
   }
 }
 

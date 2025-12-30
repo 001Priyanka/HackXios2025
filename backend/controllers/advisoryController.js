@@ -1,6 +1,168 @@
 const Advisory = require('../models/Advisory');
 const AdvisoryEngine = require('../services/advisoryEngine');
 const weatherService = require('../services/weatherService');
+const translationService = require('../services/translationService');
+
+/**
+ * Map user language preference to language code
+ * @param {string} userLanguage - User's language preference from profile
+ * @returns {string} Language code for translation service
+ */
+const mapUserLanguageToCode = (userLanguage) => {
+  const languageMap = {
+    'English': 'en',
+    'हिंदी (Hindi)': 'hi',
+    'मराठी (Marathi)': 'hi', // Use Hindi as fallback for Marathi
+    'ಕನ್ನಡ (Kannada)': 'hi', // Use Hindi as fallback for Kannada
+    'தமிழ் (Tamil)': 'hi', // Use Hindi as fallback for Tamil
+    'తెలుగు (Telugu)': 'hi', // Use Hindi as fallback for Telugu
+    'ગુજરાતી (Gujarati)': 'hi', // Use Hindi as fallback for Gujarati
+    'বাংলা (Bengali)': 'hi' // Use Hindi as fallback for Bengali
+  };
+  
+  return languageMap[userLanguage] || 'en';
+};
+
+/**
+ * Translate advisory content
+ * @param {Object} advisoryResult - Original advisory result
+ * @param {string} targetLanguage - Target language code
+ * @returns {Promise<Object>} Translation result with translated advisory
+ */
+const translateAdvisoryContent = async (advisoryResult, targetLanguage) => {
+  try {
+    if (targetLanguage === 'en') {
+      return {
+        success: true,
+        translatedAdvisory: null, // No translation needed
+        translationInfo: {
+          method: 'no_translation_needed',
+          confidence: 1.0
+        }
+      };
+    }
+
+    // Collect all texts to translate
+    const textsToTranslate = [
+      advisoryResult.cropAdvice.recommendation,
+      advisoryResult.cropAdvice.explanation,
+      advisoryResult.fertilizerAdvice.recommendation,
+      advisoryResult.fertilizerAdvice.explanation,
+      advisoryResult.irrigationAdvice.recommendation,
+      advisoryResult.irrigationAdvice.explanation
+    ];
+
+    // Add weather advice texts if available
+    if (advisoryResult.weatherAdvice) {
+      if (advisoryResult.weatherAdvice.recommendations) {
+        textsToTranslate.push(...advisoryResult.weatherAdvice.recommendations);
+      }
+      if (advisoryResult.weatherAdvice.explanation) {
+        textsToTranslate.push(advisoryResult.weatherAdvice.explanation);
+      }
+      if (advisoryResult.weatherAdvice.warnings) {
+        advisoryResult.weatherAdvice.warnings.forEach(warning => {
+          textsToTranslate.push(warning.message);
+        });
+      }
+    }
+
+    // Translate all texts
+    const translationResults = await translationService.translateMultiple(textsToTranslate, targetLanguage);
+
+    if (!translationResults.success) {
+      return {
+        success: false,
+        error: 'Translation failed',
+        details: translationResults
+      };
+    }
+
+    // Reconstruct translated advisory
+    let textIndex = 0;
+    const translatedAdvisory = {
+      cropAdvice: {
+        recommendation: translationResults.results[textIndex++].translatedText,
+        confidence: advisoryResult.cropAdvice.confidence,
+        explanation: translationResults.results[textIndex++].translatedText,
+        ruleApplied: advisoryResult.cropAdvice.ruleApplied
+      },
+      fertilizerAdvice: {
+        recommendation: translationResults.results[textIndex++].translatedText,
+        confidence: advisoryResult.fertilizerAdvice.confidence,
+        explanation: translationResults.results[textIndex++].translatedText,
+        ruleApplied: advisoryResult.fertilizerAdvice.ruleApplied
+      },
+      irrigationAdvice: {
+        recommendation: translationResults.results[textIndex++].translatedText,
+        confidence: advisoryResult.irrigationAdvice.confidence,
+        explanation: translationResults.results[textIndex++].translatedText,
+        ruleApplied: advisoryResult.irrigationAdvice.ruleApplied
+      },
+      confidenceScore: advisoryResult.confidenceScore
+    };
+
+    // Add translated weather advice if available
+    if (advisoryResult.weatherAdvice) {
+      translatedAdvisory.weatherAdvice = {
+        currentWeather: advisoryResult.weatherAdvice.currentWeather, // Keep original
+        warnings: [],
+        recommendations: [],
+        confidence: advisoryResult.weatherAdvice.confidence,
+        explanation: '',
+        ruleApplied: advisoryResult.weatherAdvice.ruleApplied
+      };
+
+      // Translate weather recommendations
+      if (advisoryResult.weatherAdvice.recommendations) {
+        for (let i = 0; i < advisoryResult.weatherAdvice.recommendations.length; i++) {
+          translatedAdvisory.weatherAdvice.recommendations.push(
+            translationResults.results[textIndex++].translatedText
+          );
+        }
+      }
+
+      // Translate weather explanation
+      if (advisoryResult.weatherAdvice.explanation) {
+        translatedAdvisory.weatherAdvice.explanation = translationResults.results[textIndex++].translatedText;
+      }
+
+      // Translate weather warnings
+      if (advisoryResult.weatherAdvice.warnings) {
+        for (let i = 0; i < advisoryResult.weatherAdvice.warnings.length; i++) {
+          translatedAdvisory.weatherAdvice.warnings.push({
+            type: advisoryResult.weatherAdvice.warnings[i].type,
+            severity: advisoryResult.weatherAdvice.warnings[i].severity,
+            message: translationResults.results[textIndex++].translatedText
+          });
+        }
+      }
+    }
+
+    // Calculate average translation confidence
+    const avgConfidence = translationResults.results.reduce((sum, result) => {
+      return sum + (result.confidence || 0);
+    }, 0) / translationResults.results.length;
+
+    return {
+      success: true,
+      translatedAdvisory: translatedAdvisory,
+      translationInfo: {
+        method: translationResults.results[0].method,
+        confidence: avgConfidence,
+        totalTexts: translationResults.totalTexts,
+        successfulTranslations: translationResults.successfulTranslations
+      }
+    };
+
+  } catch (error) {
+    console.error('Translation Error:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+};
 
 /**
  * Generate new advisory for farmer
@@ -68,6 +230,20 @@ const generateAdvisory = async (req, res) => {
     const advisoryEngine = new AdvisoryEngine();
     const advisoryResult = advisoryEngine.generateAdvice(crop, soilType, season, weatherData);
 
+    // Get farmer's language preference and translate advisory
+    const farmer = req.user; // User object from JWT middleware
+    const farmerLanguage = farmer.language || 'English';
+    const languageCode = mapUserLanguageToCode(farmerLanguage);
+    
+    console.log(`Farmer's preferred language: ${farmerLanguage} (${languageCode})`);
+
+    // Translate advisory content
+    const translationResult = await translateAdvisoryContent(advisoryResult, languageCode);
+    
+    if (!translationResult.success) {
+      console.warn('Translation failed, proceeding with original advisory:', translationResult.error);
+    }
+
     // Prepare advisory data for database
     const advisoryData = {
       farmerId,
@@ -76,6 +252,22 @@ const generateAdvisory = async (req, res) => {
       season,
       advisoryResult
     };
+
+    // Add translation information
+    if (translationResult.success) {
+      advisoryData.translationInfo = {
+        farmerLanguage: farmerLanguage,
+        languageCode: languageCode,
+        translationMethod: translationResult.translationInfo.method,
+        translationConfidence: translationResult.translationInfo.confidence,
+        translatedAt: new Date()
+      };
+
+      // Add translated advisory if translation was performed
+      if (translationResult.translatedAdvisory) {
+        advisoryData.translatedAdvisoryResult = translationResult.translatedAdvisory;
+      }
+    }
 
     // Add weather data to advisory if available
     if (weatherData) {
@@ -127,6 +319,31 @@ const generateAdvisory = async (req, res) => {
       responseData.weatherInfo = {
         included: false,
         reason: 'No location provided for weather data'
+      };
+    }
+
+    // Include translation information in response
+    if (translationResult.success) {
+      responseData.translationInfo = {
+        performed: !!translationResult.translatedAdvisory,
+        farmerLanguage: farmerLanguage,
+        languageCode: languageCode,
+        method: translationResult.translationInfo.method,
+        confidence: translationResult.translationInfo.confidence
+      };
+
+      if (translationResult.translationInfo.totalTexts) {
+        responseData.translationInfo.statistics = {
+          totalTexts: translationResult.translationInfo.totalTexts,
+          successfulTranslations: translationResult.translationInfo.successfulTranslations
+        };
+      }
+    } else {
+      responseData.translationInfo = {
+        performed: false,
+        error: translationResult.error,
+        farmerLanguage: farmerLanguage,
+        languageCode: languageCode
       };
     }
 
