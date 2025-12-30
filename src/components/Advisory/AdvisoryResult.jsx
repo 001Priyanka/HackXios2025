@@ -92,7 +92,7 @@ const AdvisoryResult = () => {
     window.speechSynthesis.cancel();
 
     // Prepare the text to be spoken
-    const adviceText = `
+    let adviceText = `
       Here is your crop advisory for ${formattedAdvisory.farmerInfo.crop} in ${formattedAdvisory.farmerInfo.season} season on ${formattedAdvisory.farmerInfo.soilType} soil.
       
       ${formattedAdvisory.recommendations.crop.title}: ${formattedAdvisory.recommendations.crop.advice}
@@ -103,6 +103,37 @@ const AdvisoryResult = () => {
       
       ${formattedAdvisory.recommendations.irrigation.title}: ${formattedAdvisory.recommendations.irrigation.advice}
       Confidence level: ${formattedAdvisory.recommendations.irrigation.confidenceText}
+    `;
+
+    // Add weather advice if available
+    if (formattedAdvisory.recommendations.weather) {
+      adviceText += `
+        
+        Weather-based advice: Based on current weather conditions, here are additional recommendations:
+      `;
+      
+      if (formattedAdvisory.recommendations.weather.advice && formattedAdvisory.recommendations.weather.advice.length > 0) {
+        formattedAdvisory.recommendations.weather.advice.forEach(advice => {
+          adviceText += ` ${advice}.`;
+        });
+      }
+      
+      adviceText += `
+        Weather confidence level: ${formattedAdvisory.recommendations.weather.confidenceText}
+      `;
+    }
+
+    // Add weather information if available
+    if (formattedAdvisory.weatherInfo && formattedAdvisory.weatherInfo.included) {
+      adviceText += `
+        
+        Current weather conditions: Temperature is ${AdvisoryService.formatTemperature(formattedAdvisory.weatherInfo.data.temperature)}, 
+        humidity is ${AdvisoryService.formatHumidity(formattedAdvisory.weatherInfo.data.humidity)}, 
+        and conditions are ${formattedAdvisory.weatherInfo.data.description}.
+      `;
+    }
+
+    adviceText += `
       
       Overall confidence score: ${formattedAdvisory.overallConfidenceText}
       
@@ -227,6 +258,97 @@ const AdvisoryResult = () => {
           </div>
         </div>
 
+        {/* Weather Information Section */}
+        {formattedAdvisory.weatherInfo && (
+          <div className="weather-summary">
+            <h2>Weather Information</h2>
+            {formattedAdvisory.weatherInfo.included ? (
+              <div className="weather-content">
+                <div className="weather-current">
+                  <div className="weather-grid">
+                    <div className="weather-item">
+                      <div className="weather-icon">🌡️</div>
+                      <div className="weather-info">
+                        <h3>Temperature</h3>
+                        <p className="weather-value">
+                          {AdvisoryService.formatTemperature(formattedAdvisory.weatherInfo.data.temperature)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="weather-item">
+                      <div className="weather-icon">💧</div>
+                      <div className="weather-info">
+                        <h3>Humidity</h3>
+                        <p className="weather-value">
+                          {AdvisoryService.formatHumidity(formattedAdvisory.weatherInfo.data.humidity)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="weather-item">
+                      <div className="weather-icon">{AdvisoryService.getWeatherEmoji(formattedAdvisory.weatherInfo.data.description)}</div>
+                      <div className="weather-info">
+                        <h3>Conditions</h3>
+                        <p className="weather-value">
+                          {formattedAdvisory.weatherInfo.data.description}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="weather-item">
+                      <div className="weather-icon">📍</div>
+                      <div className="weather-info">
+                        <h3>Location</h3>
+                        <p className="weather-value">
+                          {formattedAdvisory.weatherInfo.data.location}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Weather Warnings */}
+                {formattedAdvisory.recommendations.weather && formattedAdvisory.recommendations.weather.warnings && formattedAdvisory.recommendations.weather.warnings.length > 0 && (
+                  <div className="weather-warnings">
+                    <h3>Weather Alerts</h3>
+                    <div className="warnings-list">
+                      {formattedAdvisory.recommendations.weather.warnings.map((warning, index) => (
+                        <div 
+                          key={index} 
+                          className={`warning-item severity-${warning.severity}`}
+                          style={{ borderLeftColor: AdvisoryService.getWarningSeverityColor(warning.severity) }}
+                        >
+                          <div className="warning-header">
+                            <span className="warning-emoji">{AdvisoryService.getWarningEmoji(warning.type)}</span>
+                            <span className="warning-severity">{warning.severity?.toUpperCase()}</span>
+                          </div>
+                          <p className="warning-message">{warning.message}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="weather-unavailable">
+                <div className="weather-unavailable-icon">🌤️</div>
+                <div className="weather-unavailable-content">
+                  <h3>Weather Data Unavailable</h3>
+                  <p>
+                    {formattedAdvisory.weatherInfo.error 
+                      ? `Unable to fetch weather data: ${formattedAdvisory.weatherInfo.error}`
+                      : formattedAdvisory.weatherInfo.reason || 'Weather information was not available for this advisory'
+                    }
+                  </p>
+                  {formattedAdvisory.weatherInfo.attemptedLocation && (
+                    <p className="attempted-location">
+                      <strong>Attempted location:</strong> {formattedAdvisory.weatherInfo.attemptedLocation}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="advisory-sections">
           <div className="advice-section">
             <div className="advice-header">
@@ -275,6 +397,39 @@ const AdvisoryResult = () => {
               </div>
             </div>
           </div>
+
+          {/* Weather-Based Advice Section */}
+          {formattedAdvisory.recommendations.weather && (
+            <div className="advice-section weather-advice">
+              <div className="advice-header">
+                <div className="advice-icon">🌤️</div>
+                <h3>{formattedAdvisory.recommendations.weather.title}</h3>
+                <div className="confidence-badge" style={{ backgroundColor: AdvisoryService.getConfidenceColor(formattedAdvisory.recommendations.weather.confidence) }}>
+                  {formattedAdvisory.recommendations.weather.confidenceText}
+                </div>
+              </div>
+              <div className="advice-content">
+                {/* Weather-based recommendations */}
+                {formattedAdvisory.recommendations.weather.advice && formattedAdvisory.recommendations.weather.advice.length > 0 && (
+                  <div className="weather-recommendations">
+                    <h4>Current Weather Recommendations:</h4>
+                    <ul className="weather-advice-list">
+                      {formattedAdvisory.recommendations.weather.advice.map((advice, index) => (
+                        <li key={index} className="weather-advice-item">
+                          <span className="advice-bullet">•</span>
+                          {advice}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                <div className="advice-reasoning">
+                  <strong>Weather Analysis:</strong> {formattedAdvisory.recommendations.weather.reasoning}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="action-buttons">

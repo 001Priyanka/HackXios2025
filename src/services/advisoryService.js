@@ -190,7 +190,7 @@ class AdvisoryService {
       return null;
     }
 
-    return {
+    const formatted = {
       id: advisory.advisoryId,
       farmerInfo: advisory.farmerInfo,
       recommendations: {
@@ -220,6 +220,26 @@ class AdvisoryService {
       overallConfidenceText: this.getConfidenceText(advisory.overallConfidence),
       generatedAt: advisory.generatedAt
     };
+
+    // Add weather information if available
+    if (advisory.recommendations.weather) {
+      formatted.recommendations.weather = {
+        title: 'Weather-Based Advice',
+        currentConditions: advisory.recommendations.weather.currentConditions,
+        warnings: advisory.recommendations.weather.warnings,
+        advice: advisory.recommendations.weather.advice,
+        confidence: advisory.recommendations.weather.confidence,
+        reasoning: advisory.recommendations.weather.reasoning,
+        confidenceText: this.getConfidenceText(advisory.recommendations.weather.confidence)
+      };
+    }
+
+    // Add weather info metadata
+    if (advisory.weatherInfo) {
+      formatted.weatherInfo = advisory.weatherInfo;
+    }
+
+    return formatted;
   }
 
   /**
@@ -294,6 +314,74 @@ class AdvisoryService {
       'Alluvial': '🏞️'
     };
     return soilEmojis[soilType] || '🌍';
+  }
+
+  /**
+   * Get weather condition emoji
+   * @param {string} description - Weather description
+   * @returns {string} Emoji
+   */
+  static getWeatherEmoji(description) {
+    if (!description) return '🌤️';
+    
+    const desc = description.toLowerCase();
+    if (desc.includes('clear')) return '☀️';
+    if (desc.includes('cloud')) return '☁️';
+    if (desc.includes('rain')) return '🌧️';
+    if (desc.includes('storm')) return '⛈️';
+    if (desc.includes('snow')) return '❄️';
+    if (desc.includes('fog') || desc.includes('mist')) return '🌫️';
+    if (desc.includes('wind')) return '💨';
+    return '🌤️';
+  }
+
+  /**
+   * Get warning severity color
+   * @param {string} severity - Warning severity (high, medium, low)
+   * @returns {string} CSS color
+   */
+  static getWarningSeverityColor(severity) {
+    switch (severity?.toLowerCase()) {
+      case 'high': return '#ef4444'; // Red
+      case 'medium': return '#f97316'; // Orange
+      case 'low': return '#eab308'; // Yellow
+      default: return '#6b7280'; // Gray
+    }
+  }
+
+  /**
+   * Get warning type emoji
+   * @param {string} type - Warning type
+   * @returns {string} Emoji
+   */
+  static getWarningEmoji(type) {
+    switch (type?.toLowerCase()) {
+      case 'heat_stress': return '🔥';
+      case 'fungal_risk': return '🍄';
+      case 'cold_stress': return '🧊';
+      case 'disease_pressure': return '⚠️';
+      default: return '⚠️';
+    }
+  }
+
+  /**
+   * Format temperature for display
+   * @param {number} temperature - Temperature in Celsius
+   * @returns {string} Formatted temperature
+   */
+  static formatTemperature(temperature) {
+    if (typeof temperature === 'string') return temperature;
+    return `${temperature}°C`;
+  }
+
+  /**
+   * Format humidity for display
+   * @param {number} humidity - Humidity percentage
+   * @returns {string} Formatted humidity
+   */
+  static formatHumidity(humidity) {
+    if (typeof humidity === 'string') return humidity;
+    return `${humidity}%`;
   }
 }
 

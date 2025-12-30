@@ -23,10 +23,10 @@ class AdvisoryEngine {
   }
 
   /**
-   * Accept input: crop, soilType, season
+   * Accept input: crop, soilType, season, weatherData (optional)
    * Generate structured advisory object
    */
-  generateAdvice(crop, soilType, season) {
+  generateAdvice(crop, soilType, season, weatherData = null) {
     // Normalize inputs
     const inputs = {
       crop: crop ? crop.trim() : null,
@@ -39,16 +39,26 @@ class AdvisoryEngine {
     const fertilizerAdvice = this.getFertilizerAdvice(inputs);
     const irrigationAdvice = this.getIrrigationAdvice(inputs);
 
+    // Generate weather-based advice if weather data is provided
+    const weatherAdvice = weatherData ? this.getWeatherAdvice(weatherData, inputs) : null;
+
     // Calculate overall confidence score
     const confidenceScore = this.calculateConfidence([cropAdvice, fertilizerAdvice, irrigationAdvice]);
 
     // Return structured advisory object
-    return {
+    const advisory = {
       cropAdvice,
       fertilizerAdvice,
       irrigationAdvice,
       confidenceScore
     };
+
+    // Add weather advice if available
+    if (weatherAdvice) {
+      advisory.weatherAdvice = weatherAdvice;
+    }
+
+    return advisory;
   }
 
   /**
@@ -279,6 +289,115 @@ class AdvisoryEngine {
       confidence: 5,
       explanation: `General irrigation guidance for ${inputs.soilType} soil in ${inputs.season} season`,
       ruleApplied: 'default_irrigation'
+    };
+  }
+
+  /**
+   * Generate weather-based advice and warnings
+   * @param {Object} weatherData - Weather data from weather service
+   * @param {Object} inputs - Crop, soil, season inputs
+   * @returns {Object} Weather advice object
+   */
+  getWeatherAdvice(weatherData, inputs) {
+    const warnings = [];
+    const recommendations = [];
+    let confidence = 8;
+
+    // Extract weather parameters
+    const { temperature, humidity, description } = weatherData;
+
+    // Heat stress warning - Temperature > 35°C
+    if (temperature > 35) {
+      warnings.push({
+        type: 'heat_stress',
+        severity: 'high',
+        message: `High temperature alert: ${temperature}°C detected. Heat stress risk for crops.`
+      });
+      
+      recommendations.push('Increase irrigation frequency to combat heat stress');
+      recommendations.push('Consider shade nets or mulching to protect crops');
+      recommendations.push('Avoid fertilizer application during peak heat hours');
+      
+      if (inputs.crop) {
+        recommendations.push(`Monitor ${inputs.crop} for signs of wilting or leaf burn`);
+      }
+    }
+
+    // Fungal risk warning - Humidity > 80%
+    if (humidity > 80) {
+      warnings.push({
+        type: 'fungal_risk',
+        severity: 'medium',
+        message: `High humidity alert: ${humidity}% detected. Increased risk of fungal diseases.`
+      });
+      
+      recommendations.push('Improve air circulation around crops');
+      recommendations.push('Avoid overhead irrigation to reduce leaf wetness');
+      recommendations.push('Consider preventive fungicide application');
+      recommendations.push('Monitor crops for early signs of fungal infections');
+      
+      if (inputs.crop) {
+        recommendations.push(`Check ${inputs.crop} leaves for spots, mold, or discoloration`);
+      }
+    }
+
+    // Combined high temperature and humidity warning
+    if (temperature > 30 && humidity > 70) {
+      warnings.push({
+        type: 'disease_pressure',
+        severity: 'high',
+        message: 'High temperature and humidity combination increases disease pressure significantly.'
+      });
+      
+      recommendations.push('Implement integrated pest and disease management');
+      recommendations.push('Ensure proper plant spacing for air circulation');
+    }
+
+    // Low temperature warnings
+    if (temperature < 10) {
+      warnings.push({
+        type: 'cold_stress',
+        severity: 'medium',
+        message: `Low temperature alert: ${temperature}°C. Risk of cold stress or frost damage.`
+      });
+      
+      recommendations.push('Protect sensitive crops with row covers or plastic tunnels');
+      recommendations.push('Avoid irrigation during early morning hours');
+      recommendations.push('Consider delaying planting of warm-season crops');
+    }
+
+    // Moderate conditions - positive advice
+    if (temperature >= 20 && temperature <= 30 && humidity >= 40 && humidity <= 70) {
+      recommendations.push('Current weather conditions are favorable for most farming activities');
+      recommendations.push('Good time for planting, transplanting, and field operations');
+    }
+
+    // Weather-specific irrigation advice
+    if (description.toLowerCase().includes('rain')) {
+      recommendations.push('Reduce or skip irrigation due to expected rainfall');
+      recommendations.push('Ensure proper drainage to prevent waterlogging');
+    } else if (description.toLowerCase().includes('clear') && temperature > 25) {
+      recommendations.push('Monitor soil moisture levels closely in clear weather');
+    }
+
+    // Adjust confidence based on number of warnings
+    if (warnings.length > 2) {
+      confidence = 9; // High confidence when multiple weather risks detected
+    } else if (warnings.length === 0) {
+      confidence = 6; // Lower confidence when no specific weather concerns
+    }
+
+    return {
+      currentWeather: {
+        temperature: `${temperature}°C`,
+        humidity: `${humidity}%`,
+        description: description
+      },
+      warnings: warnings,
+      recommendations: recommendations,
+      confidence: confidence,
+      explanation: `Weather analysis based on current conditions: ${temperature}°C, ${humidity}% humidity`,
+      ruleApplied: 'weather_analysis'
     };
   }
 

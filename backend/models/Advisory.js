@@ -97,6 +97,61 @@ const advisorySchema = new mongoose.Schema({
       required: true,
       min: 1,
       max: 10
+    },
+    // Weather advice (optional - only if weather data was available)
+    weatherAdvice: {
+      currentWeather: {
+        temperature: String,
+        humidity: String,
+        description: String
+      },
+      warnings: [{
+        type: String,
+        severity: String,
+        message: String
+      }],
+      recommendations: [String],
+      confidence: Number,
+      explanation: String,
+      ruleApplied: String
+    }
+  },
+  // Weather data used for advisory generation (optional)
+  weatherData: {
+    temperature: {
+      type: Number,
+      min: -50,
+      max: 60
+    },
+    humidity: {
+      type: Number,
+      min: 0,
+      max: 100
+    },
+    description: {
+      type: String,
+      trim: true
+    },
+    location: {
+      type: String,
+      trim: true
+    },
+    fetchedAt: {
+      type: Date
+    }
+  },
+  // Weather error information (if weather fetch failed)
+  weatherError: {
+    message: {
+      type: String,
+      trim: true
+    },
+    attemptedLocation: {
+      type: String,
+      trim: true
+    },
+    failedAt: {
+      type: Date
     }
   },
   createdAt: {
@@ -130,7 +185,7 @@ advisorySchema.virtual('summary').get(function() {
 
 // Instance method to get formatted advisory
 advisorySchema.methods.getFormattedAdvisory = function() {
-  return {
+  const formatted = {
     advisoryId: this._id,
     farmerInfo: {
       farmerId: this.farmerId,
@@ -158,6 +213,45 @@ advisorySchema.methods.getFormattedAdvisory = function() {
     overallConfidence: this.advisoryResult.confidenceScore,
     generatedAt: this.createdAt
   };
+
+  // Add weather advice if available
+  if (this.advisoryResult.weatherAdvice) {
+    formatted.recommendations.weather = {
+      currentConditions: this.advisoryResult.weatherAdvice.currentWeather,
+      warnings: this.advisoryResult.weatherAdvice.warnings,
+      advice: this.advisoryResult.weatherAdvice.recommendations,
+      confidence: this.advisoryResult.weatherAdvice.confidence,
+      reasoning: this.advisoryResult.weatherAdvice.explanation
+    };
+  }
+
+  // Add weather data information if available
+  if (this.weatherData) {
+    formatted.weatherInfo = {
+      included: true,
+      data: {
+        temperature: this.weatherData.temperature,
+        humidity: this.weatherData.humidity,
+        description: this.weatherData.description,
+        location: this.weatherData.location
+      },
+      fetchedAt: this.weatherData.fetchedAt
+    };
+  } else if (this.weatherError) {
+    formatted.weatherInfo = {
+      included: false,
+      error: this.weatherError.message,
+      attemptedLocation: this.weatherError.attemptedLocation,
+      failedAt: this.weatherError.failedAt
+    };
+  } else {
+    formatted.weatherInfo = {
+      included: false,
+      reason: 'No weather data requested or available'
+    };
+  }
+
+  return formatted;
 };
 
 // Static method to find advisories by farmer
