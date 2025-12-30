@@ -36,6 +36,18 @@ const Navigation = () => {
     };
   }, [isMenuOpen]);
 
+  // Close menu on window resize to desktop size
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 1024 && isMenuOpen) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isMenuOpen]);
+
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
@@ -43,6 +55,18 @@ const Navigation = () => {
   const closeMenu = () => {
     setIsMenuOpen(false);
   };
+
+  // Navigation items array for easier management
+  const navItems = [
+    { path: '/', icon: '🏠', label: 'Home' },
+    { path: '/signup', icon: '📝', label: 'Signup' },
+    { path: '/login', icon: '👤', label: 'Login' },
+    { path: '/dashboard', icon: '📊', label: 'Dashboard' },
+    { path: '/advisory', icon: '🌱', label: 'Advisory' },
+    { path: '/result', icon: '📋', label: 'Results' },
+    { path: '/market', icon: '💰', label: 'Market' },
+    { path: '/feedback', icon: '💬', label: 'Feedback' }
+  ];
 
   return (
     <nav className="navigation">
@@ -64,38 +88,17 @@ const Navigation = () => {
 
         <div className={`nav-links ${isMenuOpen ? 'active' : ''}`}>
           <div className="nav-links-container">
-            <Link to="/" onClick={closeMenu} className="nav-link">
-              <span className="nav-icon">🏠</span>
-              Home
-            </Link>
-            <Link to="/signup" onClick={closeMenu} className="nav-link">
-              <span className="nav-icon">📝</span>
-              Signup
-            </Link>
-            <Link to="/login" onClick={closeMenu} className="nav-link">
-              <span className="nav-icon">👤</span>
-              Login
-            </Link>
-            <Link to="/dashboard" onClick={closeMenu} className="nav-link">
-              <span className="nav-icon">📊</span>
-              Dashboard
-            </Link>
-            <Link to="/advisory" onClick={closeMenu} className="nav-link">
-              <span className="nav-icon">🌱</span>
-              Advisory
-            </Link>
-            <Link to="/result" onClick={closeMenu} className="nav-link">
-              <span className="nav-icon">📋</span>
-              Results
-            </Link>
-            <Link to="/market" onClick={closeMenu} className="nav-link">
-              <span className="nav-icon">💰</span>
-              Market
-            </Link>
-            <Link to="/feedback" onClick={closeMenu} className="nav-link">
-              <span className="nav-icon">💬</span>
-              Feedback
-            </Link>
+            {navItems.map((item) => (
+              <Link 
+                key={item.path}
+                to={item.path} 
+                onClick={closeMenu} 
+                className={`nav-link ${location.pathname === item.path ? 'active' : ''}`}
+              >
+                <span className="nav-icon">{item.icon}</span>
+                {item.label}
+              </Link>
+            ))}
           </div>
         </div>
       </div>
