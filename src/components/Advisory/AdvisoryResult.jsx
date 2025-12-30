@@ -23,15 +23,24 @@ const AdvisoryResult = () => {
         setFormattedAdvisory(formatted);
         
         console.log('Retrieved advisory data from localStorage:', parsedData);
+        console.log('Formatted advisory:', formatted);
       } else {
         console.log('No advisory data found in localStorage');
+        // Try to redirect back to advisory form
+        setTimeout(() => {
+          navigate('/advisory');
+        }, 3000);
       }
     } catch (error) {
       console.error('Error retrieving data from localStorage:', error);
+      // Try to redirect back to advisory form
+      setTimeout(() => {
+        navigate('/advisory');
+      }, 3000);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [navigate]);
 
   // Cleanup effect for speech synthesis
   useEffect(() => {

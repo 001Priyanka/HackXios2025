@@ -146,6 +146,15 @@ const AdvisoryForm = () => {
     }
 
     try {
+      // Check if user is logged in
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setErrors({ submit: 'Please login to generate advisory' });
+        setIsSubmitting(false);
+        navigate('/login');
+        return;
+      }
+
       // Generate advisory using API
       const response = await AdvisoryService.generateAdvisory({
         crop: formData.crop,
@@ -163,12 +172,21 @@ const AdvisoryForm = () => {
         navigate('/result');
       } else {
         // Handle API error
-        setErrors({ submit: response.error });
+        if (response.error.includes('unauthorized') || response.error.includes('token')) {
+          setErrors({ submit: 'Session expired. Please login again.' });
+          navigate('/login');
+        } else {
+          setErrors({ submit: response.error });
+        }
         console.error('Advisory generation failed:', response.error);
       }
     } catch (error) {
       console.error('Error generating advisory:', error);
-      setErrors({ submit: 'Failed to generate advisory. Please try again.' });
+      if (error.message.includes('Network Error')) {
+        setErrors({ submit: 'Network error. Please check your connection and try again.' });
+      } else {
+        setErrors({ submit: 'Failed to generate advisory. Please try again.' });
+      }
     } finally {
       setIsSubmitting(false);
     }

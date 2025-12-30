@@ -1,0 +1,223 @@
+{
+  "cropSuitability": [
+    {
+      "id": "cs001",
+      "conditions": {
+        "soil": "Loamy",
+        "season": "Rabi",
+        "crop": null
+      },
+      "recommendation": "Wheat is highly suitable for loamy soil during Rabi season. The well-drained, fertile loamy soil provides excellent root development and nutrient retention for wheat cultivation.",
+      "confidence": 9
+    },
+    {
+      "id": "cs002",
+      "conditions": {
+        "soil": "Clay",
+        "season": "Kharif",
+        "crop": null
+      },
+      "recommendation": "Rice is ideal for clay soil during Kharif season. Clay soil retains water well, which is perfect for rice cultivation that requires standing water.",
+      "confidence": 10
+    },
+    {
+      "id": "cs003",
+      "conditions": {
+        "soil": "Sandy",
+        "season": "Summer",
+        "crop": null
+      },
+      "recommendation": "Groundnut and watermelon are suitable for sandy soil in summer. Sandy soil provides good drainage and prevents waterlogging during hot weather.",
+      "confidence": 8
+    },
+    {
+      "id": "cs004",
+      "conditions": {
+        "soil": "Black",
+        "season": "Kharif",
+        "crop": null
+      },
+      "recommendation": "Cotton and sugarcane thrive in black soil during Kharif season. Black soil's high water retention and nutrient content support these crops well.",
+      "confidence": 9
+    },
+    {
+      "id": "cs005",
+      "conditions": {
+        "soil": "Red",
+        "season": "Rabi",
+        "crop": null
+      },
+      "recommendation": "Millets and pulses are well-suited for red soil in Rabi season. These crops can tolerate the slightly acidic nature and lower fertility of red soil.",
+      "confidence": 7
+    },
+    {
+      "id": "cs006",
+      "conditions": {
+        "soil": "Alluvial",
+        "season": "Kharif",
+        "crop": null
+      },
+      "recommendation": "Maize and sugarcane are excellent choices for alluvial soil during Kharif. The fertile, well-drained alluvial soil supports high-yielding crops.",
+      "confidence": 9
+    }
+  ],
+  "fertilizerAdvice": [
+    {
+      "id": "fa001",
+      "conditions": {
+        "soil": "Sandy",
+        "season": "any",
+        "crop": "Wheat"
+      },
+      "recommendation": "Apply urea (46-0-0) at 120 kg/ha in split doses. Sandy soil has low nitrogen retention, so frequent small applications prevent nutrient loss through leaching.",
+      "confidence": 8
+    },
+    {
+      "id": "fa002",
+      "conditions": {
+        "soil": "Clay",
+        "season": "Kharif",
+        "crop": "Rice"
+      },
+      "recommendation": "Use DAP (18-46-0) at 100 kg/ha before transplanting, followed by urea at 80 kg/ha after 3 weeks. Clay soil retains nutrients well, allowing for larger applications.",
+      "confidence": 9
+    },
+    {
+      "id": "fa003",
+      "conditions": {
+        "soil": "Black",
+        "season": "any",
+        "crop": "Cotton"
+      },
+      "recommendation": "Apply NPK (19-19-19) at 150 kg/ha at sowing, followed by urea at 60 kg/ha during flowering. Cotton requires balanced nutrition throughout its growth cycle.",
+      "confidence": 8
+    },
+    {
+      "id": "fa004",
+      "conditions": {
+        "soil": "Red",
+        "season": "any",
+        "crop": "Groundnut"
+      },
+      "recommendation": "Use SSP (Single Super Phosphate) at 200 kg/ha and muriate of potash at 50 kg/ha. Groundnut fixes nitrogen naturally but needs phosphorus and potassium.",
+      "confidence": 7
+    },
+    {
+      "id": "fa005",
+      "conditions": {
+        "soil": "Loamy",
+        "season": "Rabi",
+        "crop": "Barley"
+      },
+      "recommendation": "Apply NPK (12-32-16) at 125 kg/ha at sowing. Loamy soil's good nutrient retention allows for single basal application for barley.",
+      "confidence": 8
+    },
+    {
+      "id": "fa006",
+      "conditions": {
+        "soil": "Alluvial",
+        "season": "Kharif",
+        "crop": "Maize"
+      },
+      "recommendation": "Use urea at 150 kg/ha in three splits: 1/3 at sowing, 1/3 at knee-high stage, 1/3 at tasseling. Maize has high nitrogen requirements during rapid growth phases.",
+      "confidence": 9
+    },
+    {
+      "id": "fa007",
+      "conditions": {
+        "soil": "any",
+        "season": "any",
+        "crop": "Tomato"
+      },
+      "recommendation": "Apply NPK (19-19-19) at 200 kg/ha in multiple doses: 50% at transplanting, 25% at flowering, 25% at fruit development. Tomatoes need continuous nutrition.",
+      "confidence": 8
+    }
+  ],
+  "irrigationAdvice": [
+    {
+      "id": "ia001",
+      "conditions": {
+        "soil": "Sandy",
+        "season": "Summer",
+        "crop": "any"
+      },
+      "recommendation": "Irrigate daily with light watering (15-20mm). Sandy soil drains quickly, especially in summer heat. Use drip irrigation to minimize water loss and maintain consistent moisture.",
+      "confidence": 9
+    },
+    {
+      "id": "ia002",
+      "conditions": {
+        "soil": "Clay",
+        "season": "Kharif",
+        "crop": "Rice"
+      },
+      "recommendation": "Maintain 2-5cm standing water throughout the growing season. Clay soil's water retention is perfect for rice cultivation. Drain fields 10 days before harvest.",
+      "confidence": 10
+    },
+    {
+      "id": "ia003",
+      "conditions": {
+        "soil": "Loamy",
+        "season": "Rabi",
+        "crop": "Wheat"
+      },
+      "recommendation": "Irrigate every 15-20 days with 50-60mm water. Critical stages: crown root initiation, tillering, flowering, and grain filling. Avoid overwatering in loamy soil.",
+      "confidence": 9
+    },
+    {
+      "id": "ia004",
+      "conditions": {
+        "soil": "Black",
+        "season": "any",
+        "crop": "Cotton"
+      },
+      "recommendation": "Irrigate every 10-12 days during flowering and boll development. Black soil retains moisture well, but cotton needs consistent water during critical growth phases.",
+      "confidence": 8
+    },
+    {
+      "id": "ia005",
+      "conditions": {
+        "soil": "Red",
+        "season": "Summer",
+        "crop": "Groundnut"
+      },
+      "recommendation": "Irrigate every 7-10 days with 25-30mm water. Red soil drains moderately; groundnut needs consistent moisture for pod development, especially during summer.",
+      "confidence": 7
+    },
+    {
+      "id": "ia006",
+      "conditions": {
+        "soil": "any",
+        "season": "Winter",
+        "crop": "any"
+      },
+      "recommendation": "Reduce irrigation frequency by 30-40% compared to summer. Winter's lower evaporation rate means less frequent watering. Monitor soil moisture to avoid overwatering.",
+      "confidence": 8
+    },
+    {
+      "id": "ia007",
+      "conditions": {
+        "soil": "Alluvial",
+        "season": "Kharif",
+        "crop": "Sugarcane"
+      },
+      "recommendation": "Irrigate every 7-10 days with heavy watering (75-100mm). Sugarcane is a water-intensive crop. Alluvial soil's good drainage prevents waterlogging issues.",
+      "confidence": 9
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "lastUpdated": "2025-12-29",
+    "totalRules": 20,
+    "description": "Agricultural advisory rules for Indian farming conditions covering crop suitability, fertilizer recommendations, and irrigation guidance.",
+    "soilTypes": ["Sandy", "Clay", "Loamy", "Black", "Red", "Alluvial"],
+    "seasons": ["Kharif", "Rabi", "Summer", "Winter"],
+    "crops": ["Wheat", "Rice", "Cotton", "Groundnut", "Barley", "Maize", "Tomato", "Sugarcane"],
+    "confidenceScale": {
+      "1-3": "Low confidence - experimental or region-specific",
+      "4-6": "Medium confidence - generally applicable with variations",
+      "7-8": "High confidence - well-established practices",
+      "9-10": "Very high confidence - proven and widely accepted"
+    }
+  }
+}
