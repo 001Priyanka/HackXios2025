@@ -78,7 +78,3 @@ src/
 - Safari (latest)
 - Edge (latest)
 - Mobile browsers (iOS Safari, Chrome Mobile)
-
-## License
-
-MIT License
